@@ -1,0 +1,97 @@
+Here we use the tcp and udp protocol to keep the data correctly, but those
+two protocols can't promise the file tranport correctly.
+
+We must define our own protocol to promise the file ttransport correctly.
+As a ftp project, here we only think about the leage users to upload or
+download the files, other users can't have the privillage to use those
+files.
+
+We list the steps to show how this protocol works(ignore the connect):
+  1. client send the current user informations to server include the user
+name and password.
+  user identify:
+	struct users {
+	  char *username;
+	  char *passwd;
+	}
+  2. server recieve the user identify information and authorize. No matter
+how the server must response to the clients if the client past authorized.
+  server response:
+  	struct server_db {
+	  char *command;	REQ_OK or REQ_NO
+	  int length;		data length
+	  char *msg;		server response message
+	}
+  3. if past authorized, clients enter the command mode, or close connect.
+The command mode is like this:
+soft-wr-youngcy>(enter the command)			------command mode
+The basic command are upload, download, exit or quit.
+  4. if a client connect to the server, server will check this client if he
+transported an uncomplete file last time. If no, read the log file and send
+a command to client and client continue to upload file to server. So here we
+add a new status to the command status(COMM_CONT).
+  5. how to finish this work? We'd storage the file informations. Server
+will send a package to client to tell the client which file will upload and
+how many rest size will send to server. And now server will open the file as
+append mode, then wait for client to send data and read data to file till
+the file transport completly.
+  the data structure;
+  	struct server_package {
+	  unsigned int	command;
+	  char		*filename;
+	  size_t	totalsize;
+	  size_t	recvsize;
+	  size_t	restsize;
+	}
+  but we alread defined this structure, so use this data structure instead
+of last data structre.
+	struct server_db {
+	  unsigned int	command;	 COMM_CONT command
+	  size_t	length;		 recvsize to make seek more easy
+	  uchar_t	message[MSGLEN];
+	  //message:file name length, file total size, rest size, filename.
+	}
+  client will parase this data structure
+  	struct file_info {
+	  size_t	fn_length;
+	  size_t	file_size;
+	  size_t	rest_size;
+	  uchar_t	*file_name;
+	}
+  6. if current has no log in server, just input command to command line.
+    A)a) upload file: when input the command, got the input information.
+    	struct client_db {
+	  unsigned int command = COMM_UPLD;
+	  char	filename[] = "xxxxxxxxxxx";
+	}
+	Then call the sendfile function to transport the file to server.
+      b) server got the command "COMM_UPLD", then server will call splice
+function to receive the client file. At same time, server parase the file
+name and create file, then open the file ready to write data to file.
+
+    B)a)download file: when input the download command, construct the
+command as the client_db data structure.
+	struct client_db {
+	  unsigned int command = COMM_DWLD;
+	  char filename[] = "xxxxxxxxxxxx";
+	}
+	Then call the splice function to receive the file data.
+      b) when server got the command COMM_DWLD, it will call sendfile
+function to send file to client.
+  7. think about this case, when transport the data, disconnected the
+connection. How we deal this problem? We leave this exception, When we are
+free, we sovle it.
+
+
+Communicate mode:
+			     ----->	//authorized failed, refused connect
+    clients           server |
+	|---------------->|  |		//connect and authorize
+	|<----------------|---		//past authorized
+	|---------------->|---- ----
+	|---------------->|   | \  |	//upload
+	|<----------------|   | /  |	//download
+	|<----------------|----    |
+	|<--------------->|	   |	//exit command
+				   |
+			disconnected when transporting
