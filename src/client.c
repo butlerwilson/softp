@@ -17,6 +17,7 @@
  */
 
 #include "client.h"
+#include "logicdeal.h"
 
 /*Here we implement the client. First, we should must start the server, then
  *start the clients. Like the ftp client, we also use our own command line
@@ -65,7 +66,7 @@ int client_operate(int fd, struct sockaddr *address)
 		client = (struct client_db *)malloc(sizeof(client));
 		readn = getline(&buffer, &lien_len, stdin);
 		if (readn == -1) continue;
-		res = client_construct_command(buffer, readn, client);
+		res = construct_client_db(buffer, readn, client);
 		if (res) continue;	//command error, continue
 		client_deal_command(fd, client);
 		free(client);
@@ -99,82 +100,26 @@ void client_deal_command(int fd, struct client_db *client)
 	
 }
 
+//package the clone_file_to_client function as receive function
 size_t client_recv_file(int fd, const char *filename)
 {
 	return clone_file_to_client(fd, filename);
 }
 
+//package the upload_file_from_client function as send function
 size_t client_send_file(int fd, const char *filename)
 {
 	return upload_file_from_client(fd, filename);
 }
 
+//client receive result and client send request
 size_t client_recv_result(int fd, struct server_db server)
 {
-	return tcp_recv_request(fd, (unsigned char *)&server, sizeof(server));
+	return tcp_recv_request(fd,(unsigned char *)&server,sizeof(server));
 }
-
 size_t client_send_request(int fd, struct client_db const *client)
 {
-	return tcp_send_result(fd, (unsigned char *)client, sizeof(*client));
-}
-
-int client_construct_command(char *buffer, ssize_t readn, struct client_db *client)
-{
-	size_t cmd_len = 0;
-	char *point = buffer;
-	char *tmp = buffer;
-	char cmd[BUFFSIZE] = {'\0'};
-
-	tmp = strchr(buffer, ' ');
-	if (!tmp) {
-		//print error information
-		client_print(stderr, "command error!\n");
-		return -1;
-	}
-	cmd_len = strncpy(cmd, buffer, tmp - buffer);
-	if (strncmp(cmd, "download", cmd_len) == 0)
-		client->command = COMM_DWLD;
-	else if (strncmp(cmd, "upload", cmd_len) == 0)
-		client->command = COMM_UPLD;
-/*	else if (strncmp(cmd, "message", cmd_len) == 0)
-		client->command = COMM_MESG;
-	else if (strncmp(cmd, "error", cmd_len) == 0)
-		client->command = COMM_ERRO;
-	else if (strncmp(cmd, "system", cmd_len) == 0)
-		client->command = COMM_SYST;
-*/	else {
-		client.command = 0;
-		client_print(stderr, "inviluable command!\n");
-		return -1;
-	}
-	point = tmp + 1;
-	strncpy(client->filename, point, readn - cmd_len);
-
-	return 0;
-}
-
-int client_authorize(int fd, struct users user)
-{
-	size_t size = 0;
-	ssize_t readn = 0;
-	ssize_t writn = 0;
-
-	struct server_db *server_auth;
-	char buffer[NAMELEN+PASSWDLEN];
-
-	size = sizeof(buffer);
-	memset(buffer, '\0', size);
-
-	writn = send(fd, &user, sizeof(user), 0);
-	readn = recv(fd, buffer, size, 0);
-
-	server_auth = (struct server_db *)buffer;
-	client_printf(server_auth.message);
-	if (server_auth.command == COMM_ERRO)
-		return false;
-
-	return true;
+	return tcp_send_result(fd,(unsigned char *)client,sizeof(*client));
 }
 
 int client_connect(int fd, struct sockaddr *address)

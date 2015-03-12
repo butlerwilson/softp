@@ -24,19 +24,32 @@
 #include <assert.h>
 
 #define PROCNAME "softp"
+#define LOGFILE  "../log/soft.log"
 
 #include "transport.h"
 #include "logicdeal.h"
 
 void system_log(int priority, const char *msg, ...)
 {
+	int fd = -1;
 	va_list args;
-	char buffer[MSGLEN] = {'0'};
+	char msg[MSGLEN] = {'\0'};
+	char buffer[MSGLEN] = {'\0'};
 
 	va_start(args, msg);
 	vsnprintf(buffer, MSGLEN, msg, args);
 	va_end(args);
 
+	//write message to the log file
+	fd = open(LOGFILE, "a");
+	if (fd != -1) {
+		snprintf(msg, MSGLEN, "%s  %s-%s\n", PROCNAME,
+				asctime(localtime(time(NULL))), buffer);
+		write(fd, msg, strlen(msg));
+	}
+	close(fd);
+
+	//write the message to the system log file
 	openlog(PROCNAME, LOG_PID | LOG_DEALAY, LOG_USER);
 	syslog(priority, buffer);
 	closelog();
