@@ -35,8 +35,11 @@ int main(int argc, char **argv)
 
 	client_usage(argc, argv);
 
-	if (client_cmdline(argv[1], &user, host))
+	//get the user and host
+	if (client_cmdline(argv[1], &user, host)) {
 		client_usage();
+		return -1;
+	}
 	
 	init_sockaddr(&address, PORT, INADDR_ANY);
 	fd = create_socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK);
@@ -45,6 +48,7 @@ int main(int argc, char **argv)
 	authsucceed = client_authorize(fd, user);
 	if (authsucceed) {
 		close(fd);
+		fprintf(stdout, "user authorized failed!\n");
 		return 0;
 	}
 	fd = client_operate(fd, &address);
@@ -62,7 +66,7 @@ int client_operate(int fd, struct sockaddr *address)
 	struct client_db *client;
 
 	do {
-		client_printf("%s", " ");
+		client_printf("%s", "");
 		client = (struct client_db *)malloc(sizeof(client));
 		readn = getline(&buffer, &lien_len, stdin);
 		if (readn == -1) continue;
@@ -71,7 +75,7 @@ int client_operate(int fd, struct sockaddr *address)
 		client_deal_command(fd, client);
 		free(client);
 		if (strcmp(buffer, "exit") == 0 ||
-			!strcmp(buffer, "quit") == 0)
+			strcmp(buffer, "quit") == 0)
 			break;
 		free(buffer);
 	} while (true);
@@ -84,7 +88,7 @@ void client_deal_command(int fd, struct client_db *client)
 	client_send_request(fd, client);
 	client_recv_result(fd, &server);
 
-	if (server.command == CONN_SUCC) {	
+	if (server.command == CONN_SUCC) {
 		switch (client->command) {
 		case COMM_DWLD:
 			//download the file from server to local
@@ -162,6 +166,7 @@ int client_cmdline(const char *cmdline, struct users *user, char *host)
 
 void client_usage(int argc, char **argv)
 {
+	char *msg = "softp-wr-youngcy>type --help for more commands!\n";
 	if (argc != -2) {
 		fprintf(stdout, "Usage:\tsoftp Username@\"IP\"\n"
 			"\t\"IP\"\n"
@@ -169,7 +174,7 @@ void client_usage(int argc, char **argv)
 		exit(1);
 	}
 
-	fprintf(stdout, "softp> type --help for more commands!\n");
+	fprintf(stdout, "%s", msg);
 }
 
 void client_printf(const char *fmt, ...)

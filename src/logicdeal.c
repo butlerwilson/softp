@@ -22,7 +22,9 @@ int client_authorize(int fd, struct users user)
 
 	server_auth = (struct server_db *)buffer;
 	client_printf(server_auth.message);
-	if (server_auth.command == COMM_ERR)
+	if (server_auth.command == CONN_ERRO ||
+		server_auth.command == CONN_REFD ||
+		server_auth.command == CONN_TOUT)
 		return false;
 
 	return true;

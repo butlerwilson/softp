@@ -35,7 +35,7 @@ int create_socket(int domain, int type)
 	fd = socket(domain, type, 0);
 
 	if (fd == -1) {
-		if (type == SOCK_DGRAM)
+		if (type & SOCK_DGRAM)
 			strncpy(errmsg, "Warning: udp unavalible\n", 64);
 		else
 			strncpy(errmsg, "Warning: tcp unavalible\n", 64);
@@ -299,13 +299,17 @@ int tcp_response_client_request(int clientfd, ssize_t readn, unsigned char *buff
 	size_t offset = 0;
 	ssize_t datalen = 0;
 	struct datablock *tmp = NULL;
-	char message[BUFFSIZE] = {'0'};
-	char filename[FILENAMELEN] = {'0'};
+	char message[BUFFSIZE] = {'\0'};
+	char filename[FILENAMELEN] = {'\0'};
 
 	tmp = (struct datablock *)buffer;
 	snprintf(command, COMMANDLEN, "%x", tmp->command);
 	snprintf(filename, FILENAMELEN, "%s", tmp->filename);
 	datalen = tmp->datalen;
+
+	//send the COMM_BEG command to clients.
+	struct server_db response = {COMM_TBEG, MSGLEN, "begin transport."};
+	server_send_result(clientfd, response, MSGLEN);
 
 	switch (command) {
 	case COMM_DWLD:

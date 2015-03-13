@@ -27,11 +27,14 @@
 #define COMM_ERRO	0x4	//send error message
 #define COMM_SYST	0X5	//send system message
 #define COMM_CONT	0X6	//send the continue status to client
+#define COMM_TBEG	0x7	//begin transport status
+#define COMM_TFIN	0X8	//finished transport status
 
 //connect status
 #define CONN_SUCC	0X1
 #define CONN_REFD	0X2
 #define CONN_TOUT	0X3
+#define CONN_ERRO	0X4
 
 #define USERNAME	"yx"
 #define PASSWD		"123456"
