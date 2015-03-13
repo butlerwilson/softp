@@ -11,8 +11,8 @@ We list the steps to show how this protocol works(ignore the connect):
 name and password.
   user identify:
 	struct users {
-	  char *username;
-	  char *passwd;
+	  char *username;	"youngcy"
+	  char *passwd;		"123456"
 	}
   2. server recieve the user identify information and authorize. No matter
 how the server must response to the clients if the client past authorized.
@@ -95,3 +95,4 @@ Communicate mode:
 	|<--------------->|	   |	//exit command
 				   |
 			disconnected when transporting
+
