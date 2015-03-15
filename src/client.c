@@ -126,6 +126,7 @@ size_t client_send_request(int fd, struct client_db const *client)
 	return tcp_send_result(fd,(unsigned char *)client,sizeof(*client));
 }
 
+//non-block connect with server and try 3 times if failed
 int client_connect(int fd, struct sockaddr *address)
 {
 	int res = 0;

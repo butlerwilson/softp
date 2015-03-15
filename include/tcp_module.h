@@ -36,10 +36,10 @@
 
 
 /*Init the socket address structure.
- *@port
- *@ip
- *@sockaddr
- *return
+ *@port		port
+ *@ip		ip address
+ *@sockaddr	struct sockaddr_in
+ *return	no return value
  */
 void init_sockaddr(int port, const char *ip, struct sockaddr_in *sockaddr);
 

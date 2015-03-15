@@ -55,8 +55,8 @@ struct file_properties {
 
 struct transport_head {
 	struct file_properties prop;
-	bool is_head;
-	bool is_eof;
+	bool is_head;	//if server recieve this flag, create the file
+	bool is_eof;	//when server recieve this flag, close the file
 };
 
 struct package {

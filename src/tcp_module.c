@@ -181,8 +181,10 @@ ssize_t upload_file_from_client(int tcpfd, unsigned char *buffer)
 	fd = open(tmp->filename, O_RDWR | O_APPEN);
 	res = pipe2(pipefd, O_NONBLOCK);
 	if (res == -1 || fd == -1) {
-		system_log(LOG_WARNING, "Create file: %s failed!\n", tm->filename);
-		tcp_response_user_error(tcpfd, "Create file: %s failed!\n", tm->filename);
+		system_log(LOG_WARNING, "Create file: %s failed!\n",
+				tm->filename);
+		tcp_response_user_error(tcpfd, "Create file: %s failed!\n",
+				tm->filename);
 		return -1;
 	}
 
