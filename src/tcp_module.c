@@ -165,7 +165,7 @@ ssize_t clone_file_to_client(int tcpfd, const char *filename)
 	return sendn == size >= 0 ? size : -1;
 }
 
-ssize_t upload_file_from_client(int tcpfd, unsigned char *buffer)
+ssize_t upload_file_from_client(int tcpfd, const char *filename)
 {
 	struct datablock *tmp = NULL;
 
@@ -175,23 +175,20 @@ ssize_t upload_file_from_client(int tcpfd, unsigned char *buffer)
 	size_t offset = 0;
 	ssize_t writn = 0;
 
-	tmp = (struct datablock *)buffer;
-	offet = sizeof(tmp->command) + sizeof(tmp->filename) 
-		+ sizeof(datalen);
-	fd = open(tmp->filename, O_RDWR | O_APPEN);
+	fd = open(filename, O_RDWR | O_APPEN);
 	res = pipe2(pipefd, O_NONBLOCK);
 	if (res == -1 || fd == -1) {
 		system_log(LOG_WARNING, "Create file: %s failed!\n",
-				tm->filename);
+				filename);
 		tcp_response_user_error(tcpfd, "Create file: %s failed!\n",
-				tm->filename);
+				filename);
 		return -1;
 	}
 
 	do {
 		//read data from tcpfd and write to pipefd[1]
-		res = splice(tcpfd, &offset, pipefd[1], NULL, 
-				tmp->datalen, SPLICE_NONBLOCK);
+		res = splice(tcpfd, NULL, pipefd[1], NULL, 
+				0, SPLICE_NONBLOCK);
 		//read data from pipefd[0] and write to fd
 		writn += splice(pipefd[0], NULL, fd, NULL, res);
 	} while (res >= 0);
@@ -242,7 +239,8 @@ int tcp_accept_client_conn(int clientfd)
 			return 1;
 		}
 
-		readn = tcp_recv_request(clientfd, buffer, BUFFSIZE);
+		readn = tcp_recv_request(clientfd, buffer,
+						sizeof(struct users));
 		tcp_response_client_requset(clientfd, readn, buffer);
 	} while (readn > 0);
 
@@ -300,14 +298,8 @@ int tcp_response_client_request(int clientfd, ssize_t readn, unsigned char *buff
 	int success = 0;
 	size_t offset = 0;
 	ssize_t datalen = 0;
-	struct datablock *tmp = NULL;
 	char message[BUFFSIZE] = {'\0'};
-	char filename[FILENAMELEN] = {'\0'};
-
-	tmp = (struct datablock *)buffer;
-	snprintf(command, COMMANDLEN, "%x", tmp->command);
-	snprintf(filename, FILENAMELEN, "%s", tmp->filename);
-	datalen = tmp->datalen;
+	char *filename = ((struct users *)buffer)->filename;
 
 	//send the COMM_BEG command to clients.
 	struct server_db response = {COMM_TBEG, MSGLEN, "begin transport."};
@@ -318,7 +310,7 @@ int tcp_response_client_request(int clientfd, ssize_t readn, unsigned char *buff
 		success = clone_file_to_client(clientfd, filename);
 		break;
 	case COMM_UPLD: 
-		success = upload_file_from_client(clientfd, buffer);
+		success = upload_file_from_client(clientfd, filename);
 		break;
 	case COMM_SYST:
 		break;
@@ -326,7 +318,7 @@ int tcp_response_client_request(int clientfd, ssize_t readn, unsigned char *buff
 		tcp_response_user_error(clientfd, "Unknown command!\n");
 	}
 
-	if (success != 0) {
+	if (success != true) {
 		snprintf(message, sizeof(buffer), strerror(success));
 		tcp_response_user_error(clientfd, message);
 	}

@@ -1,6 +1,8 @@
 #ifndef _LOGICDEAL_H_
 #define _LOGICDEAL_H_
 
+int client_authorize(int fd, struct users *user);
+
 /*Client authority data structure:
  *  struct user {
  *	char username[32];

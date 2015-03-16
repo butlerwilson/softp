@@ -5,7 +5,7 @@
 //include the db.h which include the basic data structure
 #include "db.h"
 
-int client_authorize(int fd, struct users user)
+int client_authorize(int fd, struct users *user)
 {
 	size_t size = 0;
 	ssize_t readn = 0;
@@ -17,7 +17,7 @@ int client_authorize(int fd, struct users user)
 	size = sizeof(buffer);
 	memset(buffer, '\0', size);
 
-	writn = send(fd, &user, sizeof(user), 0);
+	writn = send(fd, user, sizeof(struct users), 0);
 	readn = recv(fd, buffer, size, 0);
 
 	server_auth = (struct server_db *)buffer;

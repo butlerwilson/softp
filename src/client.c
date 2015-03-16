@@ -35,7 +35,7 @@ int main(int argc, char **argv)
 
 	client_usage(argc, argv);
 
-	//get the user and host
+	//get the user and host from command line
 	if (client_cmdline(argv[1], &user, host)) {
 		client_usage();
 		return -1;
@@ -45,7 +45,7 @@ int main(int argc, char **argv)
 	fd = create_socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK);
 	assert(client_connect(fd, (struct sockaddr*)&address) != -1);
 
-	authsucceed = client_authorize(fd, user);
+	authsucceed = client_authorize(fd, &user);
 	if (authsucceed) {
 		close(fd);
 		fprintf(stdout, "user authorized failed!\n");
