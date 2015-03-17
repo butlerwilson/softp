@@ -1,6 +1,8 @@
 #ifndef _LOGICDEAL_H_
 #define _LOGICDEAL_H_
 
+#include "db.h"
+
 int client_authorize(int fd, struct users *user);
 
 /*Client authority data structure:

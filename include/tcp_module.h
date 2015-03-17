@@ -21,12 +21,11 @@
 
 #define _GUN_SOURCE
 
+#include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
-
-#include "sftp.h"
 
 /* tcp module just deal the protocol related operations, including connect,
  * bind, listen, accept, read, write. All the data has no format, they are
@@ -34,7 +33,7 @@
  * stream to logic deal module.
  */
 
-
+struct sockaddr_in;
 /*Init the socket address structure.
  *@port		port
  *@ip		ip address
@@ -86,7 +85,7 @@ void tcp_module_deal(int tcpfd, fd_set *rset, fd_set *wset);
 /*Send errors to the user*/
 ssize_t tcp_response_user_error(int tcpfd, const char *errmsg);
 
-void send_sftp_echo(int tcpfd)
+void send_sftp_echo(int tcpfd);
 
 /*
  *Client data structure:
@@ -97,6 +96,6 @@ void send_sftp_echo(int tcpfd)
  *	unsigned char data[MTU - 40];
  *  };
  */
-int tcp_response_client_request(ssize_t readn, unsigned char *buffer)
+int tcp_response_client_request(ssize_t readn, unsigned char *buffer);
 
 #endif

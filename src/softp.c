@@ -19,9 +19,12 @@
 
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <apra/inet.h>
 #include <sys/time.h>
+#include <stdarg.h>
 #include <assert.h>
+#include <syslog.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 #define PROCNAME "softp"
 #define LOGFILE  "../log/soft.log"
@@ -33,7 +36,7 @@ void system_log(int priority, const char *msg, ...)
 {
 	int fd = -1;
 	va_list args;
-	char msg[MSGLEN] = {'\0'};
+	char message[MSGLEN] = {'\0'};
 	char buffer[MSGLEN] = {'\0'};
 
 	va_start(args, msg);
@@ -41,11 +44,11 @@ void system_log(int priority, const char *msg, ...)
 	va_end(args);
 
 	//write message to the log file
-	fd = open(LOGFILE, "a");
+	fd = open(LOGFILE, O_APPEND);
 	if (fd != -1) {
-		snprintf(msg, MSGLEN, "%s  %s-%s\n", PROCNAME,
+		snprintf(message, MSGLEN, "%s  %s-%s\n", PROCNAME,
 				asctime(localtime(time(NULL))), buffer);
-		write(fd, msg, strlen(msg));
+		write(fd, message, strlen(msg));
 	}
 	close(fd);
 

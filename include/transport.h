@@ -16,7 +16,7 @@
 typedef struct fd_sets {
 	int tcpfd;
 	int udpfd;
-} fd_t;
+}fd_t;
 
 /*add tcpfd and udpfd into the read fd_set*/
 void socket_fd_set(int tcpfd, int udpfd, fd_set *rset);
